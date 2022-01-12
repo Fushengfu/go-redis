@@ -11,6 +11,7 @@ import (
 func (this *RedisClient) Hdel(key string, agrs ...interface{}) int {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
+
 	agrs = append([]interface{}{key}, agrs...)
 	res, err := redis.Int(Rds.Do("HDEL", agrs...))
 	if err != nil {
@@ -27,6 +28,7 @@ func (this *RedisClient) Hdel(key string, agrs ...interface{}) int {
 func (this *RedisClient) Hexists(key string, agrs ...interface{}) int {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
+
 	agrs = append([]interface{}{key}, agrs...)
 	res, err := redis.Int(Rds.Do("HEXISTS", agrs...))
 	if err != nil {
@@ -43,6 +45,7 @@ func (this *RedisClient) Hexists(key string, agrs ...interface{}) int {
 func (this *RedisClient) Hget(key string, agrs ...interface{}) string {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
+
 	agrs = append([]interface{}{key}, agrs...)
 	res, err := redis.String(Rds.Do("HGET", agrs...))
 	if err != nil {
@@ -59,6 +62,7 @@ func (this *RedisClient) Hget(key string, agrs ...interface{}) string {
 func (this *RedisClient) Hgetall(key string) map[string]string {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
+
 	res, err := redis.StringMap(Rds.Do("HGETALL", key))
 	if err != nil {
 		log.Println(err.Error())
@@ -74,6 +78,7 @@ func (this *RedisClient) Hgetall(key string) map[string]string {
 func (this *RedisClient) Hkeys(key string) []string {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
+
 	res, err := redis.Strings(Rds.Do("HKEYS", key))
 	if err != nil {
 		log.Println(err.Error())
@@ -89,6 +94,7 @@ func (this *RedisClient) Hkeys(key string) []string {
 func (this *RedisClient) Hlen(key string) int {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
+
 	res, err := redis.Int(Rds.Do("HLEN", key))
 	if err != nil {
 		log.Println(err.Error())
@@ -104,6 +110,7 @@ func (this *RedisClient) Hlen(key string) int {
 func (this *RedisClient) Hmget(key string, field interface{}) string {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
+
 	res, err := redis.Strings(Rds.Do("HMGET", key, field))
 	if err != nil {
 		log.Println(err.Error(), ":", field)
@@ -119,6 +126,7 @@ func (this *RedisClient) Hmget(key string, field interface{}) string {
 func (this *RedisClient) Hmset(key string, field, value interface{}) bool {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
+
 	res, err := redis.String(Rds.Do("HMSET", key, field, value))
 	if err != nil {
 		log.Println(err.Error())

@@ -3,50 +3,135 @@ package go_redis
 import (
 	"github.com/garyburd/redigo/redis"
 	"log"
-	"reflect"
 )
 
 /**
- *  堵塞读取数据
+ *  将一个或多个值插入到列表头部
  */
-func (this *RedisClient) Blpop(key string, timeout int) []string {
+func (this *RedisClient) Lpush(key string, args ...interface{}) int {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
-	res, err := redis.Strings(Rds.Do("BLPOP", key, timeout))
+
+	args = append([]interface{}{key}, args...)
+	reply, err := Rds.Do("LPUSH", args...)
+
 	if err != nil {
 		log.Println(err.Error())
-		return []string{}
+		return 0
 	}
 
-	return res
+	return this.ToInt(reply)
+}
+
+/**
+ *  读取列表数据
+ */
+func (this *RedisClient) Lpop(key string) interface{} {
+	Rds := this.Conn.Get()
+	defer Rds.Close()
+	res, err := Rds.Do("LPOP", key)
+	log.Println(res, err)
+	if err != nil {
+		log.Println(err.Error())
+		return nil
+	}
+
+	if nil == res {
+		return nil
+	}
+
+	return string(res.([]byte))
+}
+
+/**
+ *  读取列表数据
+ */
+func (this *RedisClient) Rpop(key string) interface{} {
+	Rds := this.Conn.Get()
+	defer Rds.Close()
+	reply, err := Rds.Do("RPOP", key)
+	log.Println(reply, err)
+	if err != nil {
+		log.Println(err.Error())
+		return nil
+	}
+
+	if nil == reply {
+		return nil
+	}
+
+	return string(reply.([]byte))
 }
 
 /**
  *  堵塞读取数据
  */
-func (this *RedisClient) Brpop(key string, timeout int) []string {
+func (this *RedisClient) Blpop(key string, timeout int) []interface{} {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
-	res, err := redis.Strings(Rds.Do("BRPOP", key, timeout))
+
+	reply, err := Rds.Do("BLPOP", key, timeout)
+
 	if err != nil {
 		log.Println(err.Error())
-		return []string{}
+		return nil
 	}
 
-	return res
+	if nil == reply {
+		return nil
+	}
+
+	var items []interface{}
+
+	for _, item := range reply.([]interface{}) {
+		items = append(items, string(item.([]byte)))
+	}
+
+	return items
 }
 
 /**
  *  堵塞读取数据
  */
-func (this *RedisClient) BrPopLpush(key, key1 string, timeout int) string {
+func (this *RedisClient) Brpop(key string, timeout int) []interface{} {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
-	res, err := redis.String(Rds.Do("BRPOPLPUSH", key, key1, timeout))
-	if err == nil {
-		return res
+
+	reply, err := Rds.Do("BRPOP", key, timeout)
+
+	if err != nil {
+		log.Println(err.Error())
+		return nil
 	}
-	return ""
+
+	if nil == reply {
+		return nil
+	}
+
+	var items []interface{}
+
+	for _, item := range reply.([]interface{}) {
+		items = append(items, string(item.([]byte)))
+	}
+
+	return items
+}
+
+/**
+ *  堵塞读取数据
+ */
+func (this *RedisClient) BrPopLpush(key, key1 string, timeout int) interface{} {
+	Rds := this.Conn.Get()
+	defer Rds.Close()
+
+	res, err := Rds.Do("BRPOPLPUSH", key, key1, timeout)
+
+	if nil != err {
+		log.Println(err.Error())
+		return ""
+	}
+
+	return this.ToString(res)
 }
 
 /**
@@ -55,10 +140,15 @@ func (this *RedisClient) BrPopLpush(key, key1 string, timeout int) string {
 func (this *RedisClient) Lindex(key string, index int) string {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
-	res, err := redis.String(Rds.Do("LINDEX", key, index))
-	if err == nil {
-		return res
+
+	res, err := Rds.Do("LINDEX", key, index)
+	log.Println(res, err)
+
+	if nil != err {
+		log.Println(err.Error())
+		return ""
 	}
+	//
 	return ""
 }
 
@@ -73,36 +163,6 @@ func (this *RedisClient) Llen(key string) int {
 		return res
 	}
 	return 0
-}
-
-/**
- *  读取列表数据
- */
-func (this *RedisClient) Lpop(key string) string {
-	Rds := this.Conn.Get()
-	defer Rds.Close()
-	res, err := redis.String(Rds.Do("LPOP", key))
-	if err != nil {
-		log.Println(err.Error())
-		return ""
-	}
-
-	return res
-}
-
-/**
- *  读取列表数据
- */
-func (this *RedisClient) Rpop(key string) string {
-	Rds := this.Conn.Get()
-	defer Rds.Close()
-	res, err := redis.String(Rds.Do("RPOP", key))
-	if err != nil {
-		log.Println(err.Error())
-		return ""
-	}
-
-	return res
 }
 
 /**
@@ -128,30 +188,4 @@ func (this *RedisClient) RpopLpush(key, key1 string) (string, error) {
 	defer Rds.Close()
 	res, err := redis.String(Rds.Do("RPOPLPUSH", key, key1))
 	return res, err
-}
-
-/**
- *  插入列表数据
- */
-func (this *RedisClient) Lpush(key string, args ...interface{}) int {
-	Rds := this.Conn.Get()
-	defer Rds.Close()
-	args = append([]interface{}{key}, args...)
-	res, err := Rds.Do("lpush", args...)
-
-	if err != nil {
-		log.Println(err.Error())
-		return 0
-	}
-	num := 0
-	mType := reflect.TypeOf(res).String()
-	if mType == "int64" {
-		num = int(res.(int64))
-	} else if mType == "int64" {
-		num = int(res.(int32))
-	} else {
-		num = res.(int)
-	}
-
-	return num
 }

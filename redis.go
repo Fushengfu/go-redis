@@ -2,8 +2,9 @@ package go_redis
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/garyburd/redigo/redis"
-	"log"
+	"strconv"
 	"strings"
 )
 
@@ -19,6 +20,69 @@ func NewRedisClient(conn *redis.Pool) *RedisClient {
 	return &RedisClient{
 		Conn: conn,
 		OK:   "OK",
+	}
+}
+
+/**
+ *  转字符串
+ */
+func (this *RedisClient) ToString(data interface{}) string {
+	if data == nil {
+		return ""
+	}
+
+	switch data.(type) {
+	case string:
+		return data.(string)
+
+	case int64:
+		return strconv.FormatInt(data.(int64), 10)
+
+	case int:
+		return strconv.Itoa(data.(int))
+
+	case float64:
+		return strconv.Itoa(int(int64(data.(float64))))
+
+	case float32:
+		return strconv.Itoa(int(int32(data.(float32))))
+	case []byte:
+		return string(data.([]byte))
+	default:
+		return fmt.Sprintf("%v", data)
+	}
+}
+
+/**
+ *  转整型
+ */
+func (this *RedisClient) ToInt(data interface{}) int {
+	if data == nil {
+		return 0
+	}
+
+	switch data.(type) {
+	case int:
+		return data.(int)
+
+	case int64:
+		return int(data.(int64))
+
+	case []byte:
+		n, _ := strconv.ParseInt(string(data.([]byte)), 10, 0)
+		return int(n)
+
+	case float64:
+		return int(int64(data.(float64)))
+
+	case float32:
+		return int(int32(data.(float32)))
+
+	case string:
+		va, _ := strconv.Atoi(data.(string))
+		return va
+	default:
+		return 0
 	}
 }
 
@@ -70,26 +134,4 @@ func (this *RedisClient) Command(cmd string, keys ...interface{}) (str string, e
 	}
 
 	return str, err
-}
-
-/**
- *  获取redis数据
- */
-func (this *RedisClient) Del(key string) (bool, error) {
-	Rds := this.Conn.Get()
-	defer Rds.Close()
-
-	return redis.Bool(Rds.Do("DEL", key))
-}
-
-/**
- *  设置时效性
- */
-func (this *RedisClient) RedisExpire(key string, expire int) {
-	Rds := this.Conn.Get()
-	defer Rds.Close()
-	_, err := Rds.Do("expire", key, expire)
-	if err != nil {
-		log.Println(err.Error())
-	}
 }
