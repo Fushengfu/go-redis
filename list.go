@@ -24,6 +24,24 @@ func (this *RedisClient) Lpush(key string, args ...interface{}) int {
 }
 
 /**
+ *  将一个或多个值插入到列表尾部
+ */
+func (this *RedisClient) Rpush(key string, args ...interface{}) int {
+	Rds := this.Conn.Get()
+	defer Rds.Close()
+
+	args = append([]interface{}{key}, args...)
+	reply, err := Rds.Do("RPUSH", args...)
+
+	if err != nil {
+		log.Println(err.Error())
+		return 0
+	}
+
+	return this.ToInt(reply)
+}
+
+/**
  *  读取列表数据
  */
 func (this *RedisClient) Lpop(key string) interface{} {
