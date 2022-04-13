@@ -48,7 +48,7 @@ func (this *RedisClient) Lpop(key string) interface{} {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
 	res, err := Rds.Do("LPOP", key)
-	log.Println(res, err)
+	//log.Println(res, err)
 	if err != nil {
 		log.Println(err.Error())
 		return nil
@@ -68,7 +68,7 @@ func (this *RedisClient) Rpop(key string) interface{} {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
 	reply, err := Rds.Do("RPOP", key)
-	log.Println(reply, err)
+	//log.Println(reply, err)
 	if err != nil {
 		log.Println(err.Error())
 		return nil
@@ -159,15 +159,15 @@ func (this *RedisClient) Lindex(key string, index int) string {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
 
-	res, err := Rds.Do("LINDEX", key, index)
-	log.Println(res, err)
+	res, err := redis.String(Rds.Do("LINDEX", key, index))
+	//log.Println(res, err)
 
 	if nil != err {
 		log.Println(err.Error())
 		return ""
 	}
-	//
-	return ""
+
+	return res
 }
 
 /**

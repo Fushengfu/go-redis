@@ -17,10 +17,10 @@ type RedisClient struct {
  *  获取客户端连接
  */
 func NewRedisClient(conn *redis.Pool) *RedisClient {
-	return &RedisClient{
-		Conn: conn,
-		OK:   "OK",
-	}
+	client := new(RedisClient)
+	client.OK = "OK"
+	client.Conn = conn
+	return client
 }
 
 /**
