@@ -13,8 +13,8 @@ func (this *RedisClient) Del(key string) (num int) {
 	defer Rds.Close()
 
 	effectNum, err := redis.Int(Rds.Do("DEL", key))
-	if nil != err {
-		log.Println("DEL ERROR", err.Error())
+	if err == redis.ErrNil {
+		//log.Println("DEL ERROR", err.Error())
 		return 0
 	}
 
@@ -29,8 +29,8 @@ func (this *RedisClient) Expire(key string, expire int) int {
 	defer Rds.Close()
 
 	ret, err := redis.Int(Rds.Do("expire", key, expire))
-	if err != nil {
-		log.Println(err.Error())
+	if err == redis.ErrNil {
+		//log.Println(err.Error())
 		return 0
 	}
 
@@ -67,8 +67,8 @@ func (this *RedisClient) Type(keyName string) string {
 	defer Rds.Close()
 
 	reply, err := redis.String(Rds.Do("TYPE", keyName))
-	if err != nil {
-		log.Println(err.Error())
+	if err == redis.ErrNil {
+		//log.Println(err.Error())
 		return "none"
 	}
 
@@ -84,8 +84,8 @@ func (this *RedisClient) Scan(cursor interface{}, pattern interface{}, count int
 
 	reply, err := redis.Values(Rds.Do("SCAN", cursor, "MATCH", pattern, "COUNT", count))
 
-	if err != nil {
-		log.Println(err.Error())
+	if err == redis.ErrNil {
+		//log.Println(err.Error())
 		return 0, []string{}
 	}
 

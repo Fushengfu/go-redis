@@ -58,8 +58,8 @@ func (this *RedisClient) Get(key string) string {
 
 	//获取数据
 	res, err := redis.String(Rds.Do("GET", key))
-	if nil != err {
-		log.Println(err.Error())
+	if err == redis.ErrNil {
+		//log.Println(err.Error())
 		return ""
 	}
 
@@ -73,8 +73,8 @@ func (this *RedisClient) SetNx(key, str string, args ...int) bool {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
 	result, err := redis.Int(Rds.Do("SETNX", key, str))
-	if err != nil {
-		log.Println("SETNX", key, err.Error())
+	if err == redis.ErrNil {
+		//log.Println("SETNX", key, err.Error())
 		return false
 	}
 

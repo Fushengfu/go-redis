@@ -2,7 +2,7 @@ package go_redis
 
 import (
 	"github.com/garyburd/redigo/redis"
-	"log"
+	"reflect"
 )
 
 /**
@@ -14,8 +14,8 @@ func (this *RedisClient) Hdel(key string, agrs ...interface{}) int {
 
 	agrs = append([]interface{}{key}, agrs...)
 	res, err := redis.Int(Rds.Do("HDEL", agrs...))
-	if err != nil {
-		log.Println(err.Error())
+	if err == redis.ErrNil {
+		//log.Println(err.Error())
 		return 0
 	}
 
@@ -31,8 +31,8 @@ func (this *RedisClient) Hexists(key string, agrs ...interface{}) int {
 
 	agrs = append([]interface{}{key}, agrs...)
 	res, err := redis.Int(Rds.Do("HEXISTS", agrs...))
-	if err != nil {
-		log.Println(err.Error())
+	if err == redis.ErrNil {
+		//log.Println(err.Error())
 		return 0
 	}
 
@@ -48,8 +48,8 @@ func (this *RedisClient) Hget(key string, agrs ...interface{}) string {
 
 	agrs = append([]interface{}{key}, agrs...)
 	res, err := redis.String(Rds.Do("HGET", agrs...))
-	if err != nil {
-		log.Println(err.Error())
+	if err == redis.ErrNil {
+		//log.Println(err.Error())
 		return ""
 	}
 
@@ -64,8 +64,8 @@ func (this *RedisClient) Hgetall(key string) map[string]string {
 	defer Rds.Close()
 
 	res, err := redis.StringMap(Rds.Do("HGETALL", key))
-	if err != nil {
-		log.Println(err.Error())
+	if err == redis.ErrNil {
+		//log.Println(err.Error())
 		return nil
 	}
 
@@ -80,8 +80,8 @@ func (this *RedisClient) Hkeys(key string) []string {
 	defer Rds.Close()
 
 	res, err := redis.Strings(Rds.Do("HKEYS", key))
-	if err != nil {
-		log.Println(err.Error())
+	if err == redis.ErrNil {
+		//log.Println(err.Error())
 		return []string{}
 	}
 
@@ -96,8 +96,8 @@ func (this *RedisClient) Hlen(key string) int {
 	defer Rds.Close()
 
 	res, err := redis.Int(Rds.Do("HLEN", key))
-	if err != nil {
-		log.Println(err.Error())
+	if err == redis.ErrNil {
+		//log.Println(err.Error())
 		return 0
 	}
 
@@ -112,8 +112,8 @@ func (this *RedisClient) Hmget(key string, field interface{}) string {
 	defer Rds.Close()
 
 	res, err := redis.Strings(Rds.Do("HMGET", key, field))
-	if err != nil {
-		log.Println(err.Error(), ":", field)
+	if err == redis.ErrNil {
+		//log.Println(err.Error(), ":", field)
 		return ""
 	}
 
@@ -128,10 +128,47 @@ func (this *RedisClient) Hmset(key string, field, value interface{}) bool {
 	defer Rds.Close()
 
 	res, err := redis.String(Rds.Do("HMSET", key, field, value))
-	if err != nil {
-		log.Println(err.Error())
+	if err == redis.ErrNil {
+		//log.Println(err.Error())
 		return false
 	}
 
 	return res == this.OK
+}
+
+/**
+ *  迭代哈希表中的键值对。
+ */
+func (this *RedisClient) Hscan(key string, cursor, match, count interface{}) (int, []interface{}) {
+	Rds := this.Conn.Get()
+	defer Rds.Close()
+
+	if cursor == nil {
+		cursor = 0
+	}
+
+	if count == nil {
+		count = 10
+	}
+
+	if match == nil {
+		match = "*"
+	}
+
+	res, err := redis.Values(Rds.Do("HSCAN", key, cursor, "MATCH", match, "COUNT", count))
+	if err == redis.ErrNil {
+		return 0, nil
+	}
+
+	items := []interface{}{}
+
+	for _, item := range res {
+		if reflect.TypeOf(item).String() == "[]interface {}" {
+			items = item.([]interface{})
+		} else {
+			cursor = this.ToInt(item.([]byte))
+		}
+	}
+
+	return this.ToInt(cursor), items
 }

@@ -1,0 +1,6 @@
+*.exe
+*.exe~
+*.log
+*.tmp
+.DS_Store
+test.go

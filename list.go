@@ -162,8 +162,8 @@ func (this *RedisClient) Lindex(key string, index int) string {
 	res, err := redis.String(Rds.Do("LINDEX", key, index))
 	//log.Println(res, err)
 
-	if nil != err {
-		log.Println(err.Error())
+	if err == redis.ErrNil {
+		//log.Println(err.Error())
 		return ""
 	}
 
@@ -190,8 +190,8 @@ func (this *RedisClient) Lrem(key string, count int, value interface{}) int {
 	Rds := this.Conn.Get()
 	defer Rds.Close()
 	res, err := redis.Int(Rds.Do("LREM", key, count, value))
-	if err != nil {
-		log.Println(err.Error())
+	if err == redis.ErrNil {
+		//log.Println(err.Error())
 		return 0
 	}
 
